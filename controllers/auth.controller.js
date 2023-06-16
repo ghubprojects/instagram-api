@@ -7,7 +7,7 @@ const { APP_KEY } = process.env;
 const { getUsersByCondition, createUser } = require('../models/user.model');
 const { ResponseStatus } = require('../utils/response');
 
-exports.checkValidation = (req, res) => {
+const checkValidation = (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return ResponseStatus(res, 400, 'Validation Failed', errors);
@@ -19,11 +19,12 @@ exports.login = async (req, res) => {
         const { username, password } = req.body;
         checkValidation(req, res);
         const existingUser = await getUsersByCondition({ username });
+        console.log(existingUser);
         if (existingUser.length > 0) {
-            const compare = await bcrypt.compare(password, existingUser[0].password);
+            const compare = await bcrypt.compare(password, existingUser[0].passwordHash);
             if (compare) {
                 const { id } = existingUser[0];
-                const token = jwt.sign({ id }, APP_KEY, { expiresIn: '1d' });
+                const token = jwt.sign({ id }, APP_KEY);
                 return ResponseStatus(res, 200, 'Login successfully', {
                     token,
                     userData: existingUser[0],
@@ -42,7 +43,7 @@ exports.login = async (req, res) => {
 
 exports.register = async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { fullName, username, password } = req.body;
         checkValidation(req, res);
         const isExist = await getUsersByCondition({ username });
         if (isExist.length < 1) {
@@ -50,11 +51,12 @@ exports.register = async (req, res) => {
             const encryptedPassword = await bcrypt.hash(password, salt);
             const newUser = await createUser({
                 id: uuid.v4(),
+                fullName,
                 username,
-                password: encryptedPassword,
+                passwordHash: encryptedPassword,
             });
             console.log(newUser);
-            if (newUser.insertId > 0) {
+            if (newUser && newUser[0] && newUser[0].affectedRows > 0) {
                 return ResponseStatus(res, 200, 'Register Success');
             } else {
                 return ResponseStatus(res, 400, 'Register Failed');

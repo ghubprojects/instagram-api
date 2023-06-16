@@ -5,6 +5,11 @@ const { ResponseStatus } = require('../utils/response');
 
 module.exports = {
     validateRegister: [
+        body('fullName')
+            .exists()
+            .withMessage('Full name is required.')
+            .isLength({ min: 3 })
+            .withMessage('Full name must contain at least 3 characters'),
         body('username')
             .exists()
             .withMessage('Username is required.')

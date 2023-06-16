@@ -10,8 +10,9 @@ dotenv.config();
 const { APP_PORT } = process.env;
 const app = express();
 
-app.use(bodyParser.urlencoded({ extended: false }));
 app.use(morgan('dev'));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json());
 app.use(cors('*'));
 
 app.get('/api', (req, res) => {
@@ -31,5 +32,5 @@ app.all('*', (req, res) => {
 app.use(errorMiddleware);
 
 app.listen(APP_PORT, () => {
-    console.log(`App listening at http://localhost:${APP_PORT}`);
+    console.log(`App listening at http://localhost:${APP_PORT}/api`);
 });
